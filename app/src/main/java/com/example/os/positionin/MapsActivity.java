@@ -1,16 +1,16 @@
 package com.example.os.positionin;
 
 import android.graphics.Color;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.os.positionin.model.Edge;
+import com.example.os.positionin.model.Graph;
 import com.example.os.positionin.model.Vertex;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -18,16 +18,17 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
-import com.example.os.positionin.model.Graph;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import static java.lang.Math.*;
+
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+import static java.lang.Math.toDegrees;
+import static java.lang.Math.toRadians;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
@@ -47,12 +48,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LatLng markerLocation=null;
     ArrayList<LatLng> MarkerPoints;
     ArrayList<Marker> markerList;
-
+    LinkedList<Vertex> path;
     ArrayList<LatLng> points;
     LatLng origin;
     LatLng dest;
     int edgeStart,edgeEnd, source, end;
-
+    ArrayList<LatLng> arrayPoints=null;
 
     PolylineOptions polylineOptions;
 
@@ -71,6 +72,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         nodes = new ArrayList<Vertex>();
         edges = new ArrayList<Edge>();
         markerList= new ArrayList<Marker>();
+        arrayPoints= new ArrayList<LatLng>();
 
         Button button= (Button)findViewById(R.id.b1);
         button.setOnClickListener(new View.OnClickListener() {
@@ -89,6 +91,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             Log.i(TAG, "point "+String.valueOf(points.get(0)));
                             Log.i(TAG, "point "+String.valueOf(points.get(1)));
                             getPathNodes();
+                            showShortestPath();
 
                         }
                         return false;
@@ -198,7 +201,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i(TAG,"edge origin: "+MarkerPoints.get(0)+" dest: "+MarkerPoints.get(1));
                 mClickablePolyline = mMap.addPolyline((new PolylineOptions())
                         .add(origin, dest)
-                        .width(5)
+                        .width(3)
                         .color(Color.RED)
                         .geodesic(true));
 
@@ -230,7 +233,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 mClickablePolyline = mMap.addPolyline((new PolylineOptions())
                         .add(origin, dest)
-                        .width(5)
+                        .width(3)
                         .color(Color.RED)
                         .geodesic(true));
 
@@ -322,9 +325,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         Log.i(TAG, String.valueOf(source+" "+end));
         Log.i(TAG,"origin: "+markerList.get(source).getPosition()+" dest: "+markerList.get(end).getPosition());
-        dijkstra.execute(new Vertex(markerList.get(source).getId(),markerList.get(source).getPosition()));
+
+        dijkstra.execute(new Vertex(verticesAdded.get(source).getId(),verticesAdded.get(source).getName()));
         Log.i(TAG,"dijkstra executed");
-        LinkedList<Vertex> path = dijkstra.getPath(new Vertex(markerList.get(end).getId(),markerList.get(end).getPosition()));
+
+        path = dijkstra.getPath(new Vertex(verticesAdded.get(end).getId(),verticesAdded.get(end).getName()));
+
 
         assertNotNull(path);
         assertTrue(path.size() > 0);
@@ -333,6 +339,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i(TAG, "path "+String.valueOf(vertex));
 
         }
+
+        for(Vertex v: path){
+            arrayPoints.add(v.getName());
+        }
+    }
+
+    public void showShortestPath(){
+        polylineOptions= new PolylineOptions();
+        polylineOptions.addAll(arrayPoints)
+                .width(5)
+                .color(Color.BLUE)
+                .geodesic(true);
+
+        mClickablePolyline= mMap.addPolyline(polylineOptions);
+
+    for (LatLng shortestPath: arrayPoints){
+        Log.i(TAG+" arrayPts lat= ", String.valueOf(shortestPath.latitude));
+    }
     }
 
 }

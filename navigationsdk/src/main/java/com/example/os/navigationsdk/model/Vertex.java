@@ -1,4 +1,4 @@
-package com.example.os.positionin.model;
+package com.example.os.navigationsdk.model;
 
 import com.google.android.gms.maps.model.LatLng;
 

@@ -19,6 +19,7 @@
         android:layout_height="50dp"
         android:text="implement graph"
         android:layout_weight="1"
-        android:layout_gravity="center_horizontal|bottom" />
+        android:layout_gravity="center_horizontal|bottom"
+        android:onClick="implementDijkstraOnClick" />
 
 </FrameLayout>

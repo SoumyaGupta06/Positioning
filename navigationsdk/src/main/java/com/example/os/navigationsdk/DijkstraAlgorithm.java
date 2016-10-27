@@ -1,4 +1,8 @@
-package com.example.os.positionin;
+package com.example.os.navigationsdk;
+
+import com.example.os.navigationsdk.model.Edge;
+import com.example.os.navigationsdk.model.Graph;
+import com.example.os.navigationsdk.model.Vertex;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,10 +12,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.example.os.positionin.model.Edge;
-import com.example.os.positionin.model.Graph;
-import com.example.os.positionin.model.Vertex;
 
 public class DijkstraAlgorithm {
 
@@ -61,7 +61,7 @@ public class DijkstraAlgorithm {
         for (Edge edge : edges) {
             if (edge.getSource().equals(node)
                     && edge.getDestination().equals(target)) {
-                return edge.getWeight();
+                return (int)edge.getWeight();
             }
         }
         throw new RuntimeException("Should not happen");

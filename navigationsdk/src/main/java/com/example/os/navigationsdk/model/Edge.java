@@ -1,4 +1,4 @@
-package com.example.os.positionin.model;
+package com.example.os.navigationsdk.model;
 
 /**
  * Created by os on 8/31/2016.
@@ -7,9 +7,9 @@ public class Edge {
     private final String id;
     private final Vertex source;
     private final Vertex destination;
-    private final int weight;
+    private final double weight;
 
-    public Edge(String id, Vertex source, Vertex destination, int weight) {
+    public Edge(String id, Vertex source, Vertex destination, double weight) {
         this.id = id;
         this.source = source;
         this.destination = destination;
@@ -26,7 +26,7 @@ public class Edge {
     public Vertex getSource() {
         return source;
     }
-    public int getWeight() {
+    public double getWeight() {
         return weight;
     }
 

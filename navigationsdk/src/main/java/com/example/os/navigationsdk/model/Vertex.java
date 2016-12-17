@@ -1,5 +1,8 @@
 package com.example.os.navigationsdk.model;
 
+import android.content.ContentValues;
+
+import com.example.os.navigationsdk.contentprovider.NavigationDbHelper;
 import com.google.android.gms.maps.model.LatLng;
 
 public class Vertex {
@@ -49,4 +52,11 @@ public class Vertex {
         return "Lat = "+name.latitude;
     }
 
+
+    public ContentValues getContentValues() {
+        ContentValues contentValues= new ContentValues();
+        contentValues.put(NavigationDbHelper.VERTICES_COL_LATITUDE, this.getName().latitude);
+        contentValues.put(NavigationDbHelper.VERTICES_COL_LONGITUDE, this.getName().longitude);
+        return contentValues;
+    }
 }

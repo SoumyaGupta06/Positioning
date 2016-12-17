@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.os.positionin.DynamicMapTestActivity">
+
+    <fragment android:id="@+id/map2"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            tools:context="com.example.os.positionin.DynamicMapTestActivity"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"/>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/map2"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/fragmentLayout"
+            android:background="@color/accent_material_dark">
+
+            <Button
+                android:layout_width="75dp"
+                android:layout_height="wrap_content"
+                android:text="DROP START"
+                android:id="@+id/button"
+                android:layout_gravity="left"
+                android:onClick="dropStart"
+                />
+
+            <Button
+                android:layout_width="75dp"
+                android:layout_height="wrap_content"
+                android:text="DROP END"
+                android:id="@+id/button2"
+                android:layout_gravity="center_horizontal"
+                android:onClick="dropEnd"
+                />
+
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NAVIGATE"
+                android:id="@+id/button3"
+                android:layout_gravity="right"
+                android:onClick="navigate"
+                />
+        </FrameLayout>
+
+</RelativeLayout>

@@ -1,5 +1,9 @@
 package com.example.os.navigationsdk.model;
 
+import android.content.ContentValues;
+
+import com.example.os.navigationsdk.contentprovider.NavigationDbHelper;
+
 /**
  * Created by os on 8/31/2016.
  */
@@ -33,5 +37,14 @@ public class Edge {
     @Override
     public String toString() {
         return source + " " + destination;
+    }
+
+
+    public ContentValues getContentValues() {
+        ContentValues contentValues= new ContentValues();
+        contentValues.put(NavigationDbHelper.EDGES_COL_EDGE_DISTANCE, this.getWeight());
+ //       contentValues.put(NavigationDbHelper.EDGES_COL_VERTEX_ID_IN, this.getSource().getId());
+ //       contentValues.put(NavigationDbHelper.EDGES_COL_VERTEX_ID_OUT, this.getDestination().getId());
+        return contentValues;
     }
 }

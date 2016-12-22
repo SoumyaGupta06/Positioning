@@ -56,6 +56,7 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
     int edgeStart,edgeEnd, source, end;
     ArrayList<LatLng> arrayPointsOnPath=null;
     LinkedList<Vertex> path;
+    ArrayList<Vertex> mEdgeEnds;
 
 
     @Override
@@ -69,6 +70,7 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
         mMarkerList= new ArrayList<Marker>();
         mEdges = new ArrayList<Edge>();
         arrayPointsOnPath= new ArrayList<LatLng>();
+        mEdgeEnds= new ArrayList<Vertex>();
 
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -81,10 +83,17 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
     /**
      * Retrieves the saved graph
      */
-    public void loadGraph(){
+    public void loadGraph() {
 
+        LatLng latLng_in = null;
+        LatLng latLng_out = null;
+        int v_in,v_out, edgeSource = 0, edgeEnd = 0;
+        Double dist;
+        Log.i(TAG,"flag0");
         Float lat, lng;
+
         ArrayList<Integer> vertex_ids = new ArrayList<Integer>();
+
         String[] graphListColumns = {
                 NavigationDbHelper.GRAPHS_COL_ID,
                 NavigationDbHelper.GRAPHS_COL_NAME
@@ -104,25 +113,32 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
                 NavigationDbHelper.EDGES_COL_VERTEX_ID_OUT,
                 NavigationDbHelper.EDGES_COL_EDGE_DISTANCE
         };
+        double precision =  Math.pow(10, 6);
 
-        //loading vertices
-        Cursor c1 = getContentResolver().query(NavigationContract.VERTICES_CONTENT_URI, verticesListColumns, null, null, null);
-        Long lastId;
+        //load vertices
+
+        Cursor c1 = getContentResolver().query(NavigationContract.VERTICES_CONTENT_URI,  verticesListColumns,null, null, null);
+        int lastId;
+
+        LatLng point;
         if (c1 != null && c1.moveToLast()) {
             Log.i(TAG, "flag1");
-            lastId = c1.getLong(1); // 1 is the column index
+            lastId = c1.getInt(1); // 1 is the column index
             do {
-                if(c1.getInt(c1.getColumnIndex("graph_id"))==lastId) {
+                if(Integer.parseInt(c1.getString((c1.getColumnIndex("graph_id"))))==lastId) {
 
                     Log.i(TAG, "flag2");
                     vertex_ids.add(c1.getInt(c1.getColumnIndex("_id")));
                     lat = c1.getFloat(2);
                     lng = c1.getFloat(3);
-                    mVertices.add(mVertices.size(), new Vertex("Node " + mVertices.size(), new LatLng(lat,lng)));
-                    Log.i(TAG + "id: ", String.valueOf(c1.getInt(c1.getColumnIndex("graph_id"))));
-                    Log.i(TAG + "latlng :", String.valueOf(new LatLng(lat, lng)));
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lng)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
 
+                    point = new LatLng( ((int)(precision * lat))/precision, ((int)(precision * lng))/precision);
+
+                    Log.i(TAG + "graphid: ", c1.getString(c1.getColumnIndex("graph_id")));
+                    Log.i(TAG + "latlng :", String.valueOf(point));
+                    mVertices.add(mVertices.size(), new Vertex("Node " + mVertices.size(), point));
+                    Marker marker =  mMap.addMarker(new MarkerOptions().position(point).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
+                    mMarkerList.add(marker);
                 }
                 else
                     break;
@@ -130,13 +146,82 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
             } while (c1.moveToPrevious());
 
             for(Vertex v: mVertices){
-                Log.i(TAG+"mVertices: ", String.valueOf(v.getName()));
+                Log.i(TAG+"mVertices: ", String.valueOf(v.getId()));
             }
-            c1.close();
         }
 
         //load edges
 
+        Cursor c2 = getContentResolver().query(NavigationContract.EDGES_CONTENT_URI, edgeListColumns,null, null, null);
+        LatLng latLng_in_new = null, latLng_out_new = null;
+        if (c2 != null && c2.moveToLast()) {
+            Log.i(TAG, "flag3");
+            lastId = c2.getInt(1);
+            do {
+                if(Integer.parseInt(c2.getString((c2.getColumnIndex("graph_id"))))==lastId) {
+
+
+                    Log.i(TAG +" edge_id ", String.valueOf(c2.getInt(0)));
+                    v_in = c2.getInt(c2.getColumnIndex("v_id_in"));
+                    v_out = c2.getInt(c2.getColumnIndex("v_id_out"));
+                    dist = c2.getDouble(c2.getColumnIndex("distance"));
+                    Log.i(TAG + "graphid: ", c2.getString(c2.getColumnIndex("graph_id")));
+                    Log.i(TAG +"v_in", String.valueOf(v_in));
+                    Log.i(TAG +"v_out", String.valueOf(v_out));
+                    Log.i(TAG + "dist" , String.valueOf(dist));
+
+                    for(int id=0; id<vertex_ids.size(); id++){
+                        if(v_in==vertex_ids.get(id))
+                            edgeSource = id;
+                        if(v_out== vertex_ids.get(id))
+                            edgeEnd = id;
+                    }
+                    addLane(String.valueOf(mEdges.size()),edgeSource, edgeEnd, dist);
+
+                    if (c1 != null) {
+                        c1.moveToLast();
+                        do{
+                            if(v_in==Integer.parseInt(c1.getString(c1.getColumnIndex("_id")))){
+                                latLng_in = new LatLng(c1.getFloat(2), c1.getFloat(3));
+                                Log.i(TAG +" latlng_in ", String.valueOf(latLng_in));
+                                latLng_in_new = new LatLng( ((int)(precision * latLng_in.latitude))/precision, ((int)(precision * latLng_in.longitude))/precision);
+
+                            }
+                            if(v_out==Integer.parseInt(c1.getString(c1.getColumnIndex("_id")))){
+                                latLng_out = new LatLng(c1.getFloat(2), c1.getFloat(3));
+                                Log.i(TAG +" latlng_out ", String.valueOf(latLng_out));
+                                latLng_out_new = new LatLng( ((int)(precision * latLng_out.latitude))/precision, ((int)(precision * latLng_out.longitude))/precision);
+
+                            }
+
+                        }while(c1.moveToPrevious());
+                    }
+
+
+                    mEdgeEnds.add(new Vertex(String.valueOf(v_in), latLng_in_new));
+                    mEdgeEnds.add(new Vertex(String.valueOf(v_out), latLng_out_new));
+
+                    mClickablePolyline = mMap.addPolyline((new PolylineOptions())
+                            .add(mEdgeEnds.get(0).getName(), mEdgeEnds.get(1).getName())
+                            .width(3)
+                            .color(Color.RED)
+                            .geodesic(false));
+
+                    mEdgeEnds.clear();
+
+                }
+
+            } while (c2.moveToPrevious());
+
+            for(Edge edge: mEdges){
+                Log.i(TAG +" edge id ", edge.getId());
+                Log.i(TAG +" source, end ", edge.getSource().getId()+ String.valueOf(edge.getDestination().getId()));
+            }
+        }
+        if (c2 != null && c1 != null) {
+            c2.close();
+            c1.close();
+        }
 
     }
 
@@ -239,7 +324,6 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
 
             Log.i(TAG,"flag");
             midPoint=midOfTwoLocations(first.latitude,first.longitude,last.latitude,last.longitude);
-//            Marker marker = mMap.addMarker(new MarkerOptions().position(midPoint).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));
             double d1= distance(first.latitude,first.longitude,p.latitude,p.longitude);
             double d2= distance(last.latitude,last.longitude,p.latitude,p.longitude);
 
@@ -368,6 +452,19 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
 
     }
 
+    /**
+     * Adds a new Edge object to the ArrayList
+     *
+     * @param laneId ID of the edge to be added
+     * @param sourceLocNo source vertex index of the new edge
+     * @param destLocNo  mDestination vertex index of the new edge
+     * @param distance length of the edge in km
+     */
+    private void addLane(String laneId, int sourceLocNo, int destLocNo,
+                         double distance) {
+        Edge lane = new Edge(laneId,mVertices.get(sourceLocNo), mVertices.get(destLocNo), distance);
+        mEdges.add(lane);
+    }
 
 
     /**

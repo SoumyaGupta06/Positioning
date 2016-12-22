@@ -43,8 +43,6 @@ public class Edge {
     public ContentValues getContentValues() {
         ContentValues contentValues= new ContentValues();
         contentValues.put(NavigationDbHelper.EDGES_COL_EDGE_DISTANCE, this.getWeight());
- //       contentValues.put(NavigationDbHelper.EDGES_COL_VERTEX_ID_IN, this.getSource().getId());
- //       contentValues.put(NavigationDbHelper.EDGES_COL_VERTEX_ID_OUT, this.getDestination().getId());
         return contentValues;
     }
 }

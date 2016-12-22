@@ -88,10 +88,13 @@ public class DrawMap extends FragmentActivity implements OnMapReadyCallback, Goo
 
     /**
      * Marks the locations on map and makes calls for saving vertices and edges
-     * @param point is added to mMarkerArrayList as  mOrigin or mDestination
+     * @param pPoint is added to mMarkerArrayList as  mOrigin or mDestination
      */
     @Override
-    public void onMapClick(LatLng point) {
+    public void onMapClick(LatLng pPoint) {
+
+        double precision =  Math.pow(10, 6);
+        LatLng point = new LatLng( ((int)(precision * pPoint.latitude))/precision, ((int)(precision * pPoint.longitude))/precision);
 
         // Already two locations
         if (mMarkerArrayList.size() > 1) {
@@ -319,7 +322,8 @@ public class DrawMap extends FragmentActivity implements OnMapReadyCallback, Goo
      * Saves an edge in table
      */
     public void saveEdge(){
-        
+
+        LatLng origin, destination;
         int g_id = lastGraphId();
         int vId_in = 0, vId_out = 0;
         String[] verticesListColumns =  {
@@ -333,18 +337,20 @@ public class DrawMap extends FragmentActivity implements OnMapReadyCallback, Goo
             c1.moveToFirst();
             do{
                 Log.i(TAG +"markerpoint ", (String.valueOf(mMarkerArrayList.get(0).latitude)));
-                Log.i(TAG +" latlng ", String.valueOf(c1.getFloat(c1.getColumnIndex("latitude"))));
-                
-                // not getting the correct vertex_in and vertex_out IDs from vertex table if it's entry already exists in the table because the retrieved value cannot be compared to the latlng of the location selected as it is not that accurate
-                
-                if((String.valueOf(mMarkerArrayList.get(0).latitude))==((String.valueOf(c1.getFloat(c1.getColumnIndex("latitude"))))) && (String.valueOf(mMarkerArrayList.get(0).longitude)) == (String.valueOf(c1.getFloat(c1.getColumnIndex("longitude"))))) {
+                Log.i(TAG +" latlng ", String.valueOf(c1.getFloat(c1.getColumnIndex("latitude"))) +" ,"+ (String.valueOf(c1.getFloat(c1.getColumnIndex("longitude")))));
+
+                double new_precision =  Math.pow(10, 5);
+                origin = new LatLng( ((int)(new_precision * mMarkerArrayList.get(0).latitude))/new_precision, ((int)(new_precision * mMarkerArrayList.get(0).longitude))/new_precision);
+                destination = new LatLng( ((int)(new_precision * mMarkerArrayList.get(1).latitude))/new_precision, ((int)(new_precision * mMarkerArrayList.get(1).longitude))/new_precision);
+
+                LatLng readFromVertices = new LatLng(((int)(new_precision * c1.getFloat(c1.getColumnIndex("latitude"))))/new_precision, ((int)(new_precision * c1.getFloat(c1.getColumnIndex("longitude"))))/new_precision);
+
+                if(origin.latitude == readFromVertices.latitude && origin.longitude == readFromVertices.longitude) {
                     vId_in=c1.getInt(c1.getColumnIndex("_id"));
                     Log.i(TAG +" vId_in ", String.valueOf(vId_in));
                 }
 
-                Log.i(TAG +" latlng ", String.valueOf(c1.getFloat(c1.getColumnIndex("latitude"))));
-                
-                if(mMarkerArrayList.get(1).equals(new LatLng(c1.getLong(c1.getColumnIndex("latitude")),c1.getLong(c1.getColumnIndex("longitude"))))){
+                if(destination.latitude == readFromVertices.latitude && destination.longitude == readFromVertices.longitude){
                     vId_out=c1.getInt(c1.getColumnIndex("_id"));
                     Log.i(TAG +" vId_out ", String.valueOf(vId_out));
                 }
@@ -361,5 +367,6 @@ public class DrawMap extends FragmentActivity implements OnMapReadyCallback, Goo
         Log.i(TAG+ " info C"+ (mEdges.size()-1), uri.getLastPathSegment());
         Log.i(TAG, "Edge saved!");
     }
+
 
 }

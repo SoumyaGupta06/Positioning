@@ -48,6 +48,7 @@
             android:layout_gravity="right"
             android:onClick="navigate"
              />
+
     </FrameLayout>
 
 </RelativeLayout>

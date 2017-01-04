@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.CursorAdapter;
+import android.widget.Toast;
 
 import com.example.os.navigationsdk.DijkstraAlgorithm;
 import com.example.os.navigationsdk.contentprovider.NavigationContract;
@@ -35,7 +36,6 @@ public class StaticMapTestActivity  extends FragmentActivity implements OnMapRea
     CursorAdapter mCursorAdapter;
     String[] mProjection;
     String mSelectionClause;
-    LatLng destination, origin;
     ArrayList<LatLng> MarkerPoints;     // stores source and destination selected
     private GoogleMap mMap;
     final String TAG= "dijkstra";
@@ -135,7 +135,7 @@ public class StaticMapTestActivity  extends FragmentActivity implements OnMapRea
 
                     Log.i(TAG + "graphid: ", c1.getString(c1.getColumnIndex("graph_id")));
                     Log.i(TAG + "latlng :", String.valueOf(point));
-                    mVertices.add(mVertices.size(), new Vertex("Node " + mVertices.size(), point));
+                    mVertices.add(mVertices.size(), new Vertex(String.valueOf(mVertices.size()), point));
                     Marker marker =  mMap.addMarker(new MarkerOptions().position(point).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
                     mMarkerList.add(marker);
                 }
@@ -200,11 +200,16 @@ public class StaticMapTestActivity  extends FragmentActivity implements OnMapRea
                     mEdgeEnds.add(new Vertex(String.valueOf(v_in), latLng_in_new));
                     mEdgeEnds.add(new Vertex(String.valueOf(v_out), latLng_out_new));
 
-                    mClickablePolyline = mMap.addPolyline((new PolylineOptions())
+                    try {
+                        mClickablePolyline = mMap.addPolyline((new PolylineOptions())
                                 .add(mEdgeEnds.get(0).getName(), mEdgeEnds.get(1).getName())
-                                .width(3)
+                                .width(15)
                                 .color(Color.RED)
                                 .geodesic(false));
+                    }
+                    catch(Exception ex){
+                        ex.printStackTrace();
+                    }
 
                     mEdgeEnds.clear();
 
@@ -212,6 +217,7 @@ public class StaticMapTestActivity  extends FragmentActivity implements OnMapRea
 
             } while (c2.moveToPrevious());
 
+            addEdges();
             for(Edge edge: mEdges){
                 Log.i(TAG +" edge id ", edge.getId());
                 Log.i(TAG +" source, end ", edge.getSource().getId()+ String.valueOf(edge.getDestination().getId()));
@@ -222,6 +228,14 @@ public class StaticMapTestActivity  extends FragmentActivity implements OnMapRea
             c1.close();
         }
 
+    }
+
+
+    public void addEdges(){
+        int size = mEdges.size();
+        for (int i=0;i<size; i++){
+            addLane(String.valueOf(mEdges.size()),Integer.parseInt(mEdges.get(i).getDestination().getId()), Integer.parseInt(mEdges.get(i).getSource().getId()),mEdges.get(i).getWeight());
+        }
     }
 
     @Override
@@ -261,11 +275,18 @@ public class StaticMapTestActivity  extends FragmentActivity implements OnMapRea
     }
 
     public void navigate(View pView){
-        mGraph = new Graph("graph", mVertices, mEdges);
-        mDijkstra = new DijkstraAlgorithm(mGraph);
-        getPathNodes();
-        showShortestPath();
-
+        if(points==null){
+            Toast.makeText(StaticMapTestActivity.this, "Select source and destination points", Toast.LENGTH_SHORT).show();
+        }
+        try {
+            mGraph = new Graph("graph", mVertices, mEdges);
+            mDijkstra = new DijkstraAlgorithm(mGraph);
+            getPathNodes();
+            showShortestPath();
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
 
     }
 

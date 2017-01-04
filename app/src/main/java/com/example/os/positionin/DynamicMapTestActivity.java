@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.example.os.navigationsdk.DijkstraAlgorithm;
 import com.example.os.navigationsdk.contentprovider.NavigationContract;
@@ -48,12 +49,11 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
     DijkstraAlgorithm mDijkstra;
     ArrayList<LatLng> MarkerPoints;     // stores source and destination selected
     ArrayList<LatLng> points;
-    LatLng origin;
-    LatLng destination, nearestPointOnEdge;
+    LatLng nearestPointOnEdge;
     private Polyline mClickablePolyline;
     PolylineOptions polylineOptions;
     ArrayList<Marker> mMarkerList;      //list of markers on graph
-    int edgeStart,edgeEnd, source, end;
+    int source, end;
     ArrayList<LatLng> arrayPointsOnPath=null;
     LinkedList<Vertex> path;
     ArrayList<Vertex> mEdgeEnds;
@@ -136,7 +136,7 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
 
                     Log.i(TAG + "graphid: ", c1.getString(c1.getColumnIndex("graph_id")));
                     Log.i(TAG + "latlng :", String.valueOf(point));
-                    mVertices.add(mVertices.size(), new Vertex("Node " + mVertices.size(), point));
+                    mVertices.add(mVertices.size(), new Vertex(String.valueOf(mVertices.size()), point));
                     Marker marker =  mMap.addMarker(new MarkerOptions().position(point).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
                     mMarkerList.add(marker);
                 }
@@ -203,7 +203,7 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
 
                     mClickablePolyline = mMap.addPolyline((new PolylineOptions())
                             .add(mEdgeEnds.get(0).getName(), mEdgeEnds.get(1).getName())
-                            .width(3)
+                            .width(15)
                             .color(Color.RED)
                             .geodesic(false));
 
@@ -213,6 +213,7 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
 
             } while (c2.moveToPrevious());
 
+            addEdges();
             for(Edge edge: mEdges){
                 Log.i(TAG +" edge id ", edge.getId());
                 Log.i(TAG +" source, end ", edge.getSource().getId()+ String.valueOf(edge.getDestination().getId()));
@@ -223,6 +224,13 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
             c1.close();
         }
 
+    }
+
+    public void addEdges(){
+        int size = mEdges.size();
+        for (int i=0;i<size; i++){
+            addLane(String.valueOf(mEdges.size()),Integer.parseInt(mEdges.get(i).getDestination().getId()), Integer.parseInt(mEdges.get(i).getSource().getId()),mEdges.get(i).getWeight());
+        }
     }
 
     public void dropStart(View pView){
@@ -238,12 +246,18 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
      * @param pView
      */
     public void navigate(View pView){
-
+        if(points==null){
+            Toast.makeText(DynamicMapTestActivity.this, "Select source and destination points", Toast.LENGTH_SHORT).show();
+        }
+        try {
         mGraph = new Graph("graph", mVertices, mEdges);
         mDijkstra = new DijkstraAlgorithm(mGraph);
         getPathNodes();
         showShortestPath();
-
+        }
+        catch (Exception ex){
+            ex.printStackTrace();
+        }
     }
 
 
@@ -502,7 +516,7 @@ public class DynamicMapTestActivity extends FragmentActivity implements OnMapRea
      */
     private void splitEdge(Edge nearestEdge, LatLng minimumDistancePoint){
 
-        mVertices.add(new Vertex("Node " + mVertices.size(),minimumDistancePoint));
+        mVertices.add(new Vertex(String.valueOf(mVertices.size()),minimumDistancePoint));
         mEdges.add(new Edge(String.valueOf(mEdges.size()),nearestEdge.getSource(),mVertices.get(mVertices.size()-1), distance(nearestEdge.getSource().getName().latitude, nearestEdge.getSource().getName().longitude, minimumDistancePoint.latitude,minimumDistancePoint.longitude)));
         mEdges.add(new Edge(nearestEdge.getId(), mVertices.get(mVertices.size()-1), nearestEdge.getDestination(), distance(minimumDistancePoint.latitude,minimumDistancePoint.longitude,nearestEdge.getDestination().getName().latitude,nearestEdge.getDestination().getName().longitude)));
         mEdges.remove(nearestEdge);
